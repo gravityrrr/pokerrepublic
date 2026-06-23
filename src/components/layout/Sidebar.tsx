@@ -8,7 +8,9 @@ import {
   Settings,
   Bell,
   LogOut,
-  Shield
+  Shield,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { AuthContext } from '../../App';
 import { supabase } from '../../lib/supabase';
@@ -16,9 +18,10 @@ import { toast } from 'sonner';
 
 interface SidebarProps {
   isOpen: boolean;
+  toggleSidebar: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const { session, role } = useContext(AuthContext);
 
   const navItems = [
@@ -62,11 +65,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+      {/* Logo + Toggle Row */}
       <div className="sidebar-header">
-        <div className="brand-logo" style={{ padding: '0.5rem 0' }}>
-          <img src="/logo.png" alt="Poker Republic" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
-          {isOpen && <span className="brand-text" style={{ fontSize: '1.1rem' }}>Poker Republic</span>}
-        </div>
+        <img 
+          src="/logo.png" 
+          alt="Poker Republic" 
+          className="sidebar-logo"
+        />
+        <button className="sidebar-toggle-btn" onClick={toggleSidebar} title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}>
+          {isOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -79,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 title={!isOpen ? item.name : undefined}
               >
                 <span className="nav-icon">{item.icon}</span>
-                {isOpen && <span className="nav-text">{item.name}</span>}
+                <span className="nav-text">{item.name}</span>
               </NavLink>
             </li>
           ))}
@@ -96,14 +104,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 title={!isOpen ? item.name : undefined}
               >
                 <span className="nav-icon">{item.icon}</span>
-                {isOpen && <span className="nav-text">{item.name}</span>}
+                <span className="nav-text">{item.name}</span>
               </NavLink>
             </li>
           ))}
           <li className="nav-item">
             <button className="nav-link logout-btn" title={!isOpen ? "Logout" : undefined} onClick={handleLogout}>
               <span className="nav-icon"><LogOut size={20} /></span>
-              {isOpen && <span className="nav-text">Logout</span>}
+              <span className="nav-text">Logout</span>
             </button>
           </li>
         </ul>

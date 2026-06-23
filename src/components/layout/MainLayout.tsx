@@ -19,9 +19,9 @@ const MainLayout: React.FC = () => {
         className={`mobile-backdrop ${sidebarOpen ? 'active' : ''}`}
         onClick={() => setSidebarOpen(false)}
       ></div>
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <div className={`layout-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <Header toggleSidebar={toggleSidebar} />
+        <Header />
         <main className="layout-main animate-fade-in">
           <AnimatePresence mode="wait">
             <motion.div

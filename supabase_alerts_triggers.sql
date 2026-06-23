@@ -34,7 +34,7 @@ DECLARE
   player_loyalty INTEGER;
   p_name TEXT;
 BEGIN
-  SELECT loyaltyScore, first_name || ' ' || last_name INTO player_loyalty, p_name 
+  SELECT loyalty_score, first_name || ' ' || last_name INTO player_loyalty, p_name 
   FROM public.players WHERE id = NEW.player_id;
 
   -- Anyone with a loyalty score over 100 is considered VIP

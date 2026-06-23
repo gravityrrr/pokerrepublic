@@ -55,11 +55,13 @@ const Alerts: React.FC = () => {
   return (
     <div className="alerts-container page-container">
       <div className="page-header">
-        <h1 className="page-title">System Alerts</h1>
-        <p className="text-muted">Recent notifications and warnings from the floor.</p>
+        <div>
+          <h1 className="page-title">System Alerts</h1>
+          <p className="page-subtitle">Recent notifications and warnings from the floor.</p>
+        </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '2rem' }}>
+      <div className="card" style={{ padding: '1.5rem' }}>
         {alerts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
             <Bell size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />

@@ -134,18 +134,17 @@ const Players: React.FC = () => {
         </div>
       </div>
 
-      <div className="card filters-card">
-        <div className="filters-container">
-          <div className="search-box">
-            <Search size={18} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search by name, phone, or ID..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input-large"
-            />
-          </div>
+      <div className="toolbar glass-panel">
+        <div className="search-bar" style={{ position: 'relative' }}>
+          <Search size={18} className="search-icon" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+          <input 
+            type="text" 
+            placeholder="Search by name, phone, or ID..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field"
+            style={{ paddingLeft: '2.75rem', width: '100%' }}
+          />
         </div>
       </div>
 

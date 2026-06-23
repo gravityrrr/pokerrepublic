@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { User } from 'lucide-react';
+import { User, ArrowLeft } from 'lucide-react';
 import './Auth.css';
 
 interface AuthProps {
@@ -47,7 +47,15 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
 
   return (
     <div className={`auth-container ${isStaff ? 'auth-staff-bg' : 'auth-admin-bg'}`}>
-      <div className="auth-card glass-panel" style={{ borderTop: `4px solid ${isStaff ? 'var(--accent-success)' : 'var(--accent-vip)'}`}}>
+      <div className="auth-card glass-panel" style={{ position: 'relative', borderTop: `4px solid ${isStaff ? 'var(--accent-primary)' : 'var(--accent-danger)'}`}}>
+        <button 
+          onClick={() => navigate('/auth')}
+          style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: 'var(--radius-full)' }}
+          className="icon-btn"
+          title="Back to Selection"
+        >
+          <ArrowLeft size={20} />
+        </button>
         <div className="auth-header">
           <div className="auth-logo-img-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
             <img src="/logo.png" alt="Poker Republic" style={{ height: '60px', objectFit: 'contain' }} />
@@ -62,13 +70,14 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
           <div className="form-group mb-4">
             <label className="input-label">Username</label>
             <div style={{ position: 'relative' }}>
-              <User size={18} className="input-icon" />
+              <User size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text" 
-                className="input-field with-icon" 
+                className="input-field" 
                 placeholder="e.g. staff1" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                style={{ paddingLeft: '2.75rem' }}
                 required
               />
             </div>

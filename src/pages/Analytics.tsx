@@ -160,7 +160,7 @@ const Analytics: React.FC = () => {
       ) : (
         <>
           {/* Top KPI Cards */}
-          <div className="dashboard-grid" style={{ marginBottom: '2rem' }}>
+          <div className="stats-grid mb-8">
             <StatCard 
               title="Total Hours Played" 
               value={totalHours.toLocaleString()} 

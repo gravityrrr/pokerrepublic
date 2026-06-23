@@ -70,19 +70,20 @@ const StaffManagement: React.FC = () => {
         </button>
       </div>
 
-      <div className="toolbar glass-panel">
-        <div className="search-bar">
-          <Search size={18} className="text-muted" />
+      <div className="toolbar card">
+        <div className="search-bar" style={{ position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
             type="text" 
-            placeholder={activeTab === 'directory' ? "Search by name, email, or role..." : "Search attendance records..."} 
-            className="search-input"
+            placeholder={activeTab === 'directory' ? "Search by username..." : "Search attendance records..."} 
+            className="input-field"
+            style={{ paddingLeft: '2.75rem', width: '100%' }}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
           {activeTab === 'attendance' && attendanceRecords.length > 0 && (
             <button 
               className="btn-secondary"
@@ -93,24 +94,21 @@ const StaffManagement: React.FC = () => {
                 CheckIn: new Date(r.check_in_time).toLocaleString(),
                 CheckOut: r.check_out_time ? new Date(r.check_out_time).toLocaleString() : 'Active'
               })))}
-              style={{ margin: 0, borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
             >
               Export CSV
             </button>
           )}
           <button 
-            className={`btn-secondary ${activeTab === 'directory' ? 'btn-primary' : ''}`}
+            className={activeTab === 'directory' ? 'btn-primary' : 'btn-secondary'}
             onClick={() => setActiveTab('directory')}
-            style={{ margin: 0 }}
           >
             Directory
           </button>
           <button 
-            className={`btn-secondary ${activeTab === 'attendance' ? 'btn-primary' : ''}`}
+            className={activeTab === 'attendance' ? 'btn-primary' : 'btn-secondary'}
             onClick={() => setActiveTab('attendance')}
-            style={{ margin: 0 }}
           >
-            Attendance Reports
+            Attendance
           </button>
         </div>
       </div>
