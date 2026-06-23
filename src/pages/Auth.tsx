@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import './Auth.css';
 
 interface AuthProps {
@@ -28,10 +29,13 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
     });
     
     if (signInError) {
+      toast.error(signInError.message || 'Failed to sign in');
       setError(signInError.message);
       setLoading(false);
       return;
     }
+    
+    toast.success('Successfully signed in');
     
     // AuthContext will automatically pick up the session change
     setLoading(false);

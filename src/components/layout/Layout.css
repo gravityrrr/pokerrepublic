@@ -135,7 +135,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .layout-content.sidebar-open {
@@ -307,5 +307,45 @@
   
   .search-bar {
     display: none; /* Hide on mobile, show via icon instead */
+  }
+
+  .header {
+    padding: 0 1rem;
+  }
+
+  .header-left {
+    gap: 0.5rem;
+  }
+
+  .header-right {
+    gap: 0.5rem;
+  }
+
+  .user-info {
+    display: none; /* Hide name and role on mobile header */
+  }
+}
+
+.mobile-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 95;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .mobile-backdrop.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .layout-main {
+    padding: 1rem;
   }
 }

@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { exportToCsv } from '../utils/exportCsv';
 import './Dashboard.css';
+import { AuthContext } from '../App';
 import {
   BarChart,
   Bar,
@@ -51,6 +53,7 @@ const StatCard = ({ title, value, icon, trend, trendUp, delay }: any) => (
 );
 
 const Dashboard: React.FC = () => {
+  const { role } = React.useContext(AuthContext);
   const [stats, setStats] = useState({
     total_registered_players: 0,
     players_currently_playing: 0,
@@ -63,7 +66,10 @@ const Dashboard: React.FC = () => {
   ]);
 
   const fetchStats = async () => {
-    const { data } = await supabase.from('vw_dashboard_summary').select('*').single();
+    const { data, error } = await supabase.from('vw_dashboard_summary').select('*').single();
+    if (error) {
+      toast.error("Failed to load dashboard stats: " + error.message);
+    }
     if (data) {
       setStats(data);
     }
@@ -105,7 +111,14 @@ const Dashboard: React.FC = () => {
           <p className="page-subtitle">Real-time floor operations and analytics</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">Export Report</button>
+          {role === 'Super Admin' && (
+            <button 
+              className="btn-secondary"
+              onClick={() => exportToCsv('dashboard_summary_report', [stats])}
+            >
+              Export Report
+            </button>
+          )}
           <button className="btn-primary">New Check-in</button>
         </div>
       </div>

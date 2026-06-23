@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { AuthContext } from '../../App';
 import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -50,10 +51,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           .update({ check_out_time: new Date().toISOString() })
           .eq('id', attendance.id);
       }
-    } catch (e) {
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) toast.error("Error signing out: " + error.message);
+    } catch (e: any) {
       console.error("Failed to checkout", e);
+      toast.error("Failed to sign out properly.");
     }
-    await supabase.auth.signOut();
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Upload, X, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 import './PlayerRegistration.css';
 
 interface Props {
@@ -44,10 +45,10 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
         videoRef.current.srcObject = stream;
         setCameraActive(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error accessing camera:", err);
       setCameraError(true);
-      // alert("Could not access camera. Please use HTTPS or check permissions.");
+      toast.error("Camera access denied or unavailable.");
     }
   };
 
@@ -106,7 +107,7 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   const handleComplete = async () => {
     if (!firstName || !lastName || !phone) {
-      alert("Please fill out First Name, Last Name, and Phone Number.");
+      toast.error("Please fill out First Name, Last Name, and Phone Number.");
       return;
     }
     
@@ -181,10 +182,11 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
       setKycFile(null);
       setKycDocNumber('');
       setStep(1);
+      toast.success("Player successfully registered!");
       onClose();
 
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "An error occurred during registration.");
     } finally {
       setIsSubmitting(false);
     }
@@ -262,20 +264,38 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
                           </div>
                         )}
                       </div>
-                      <div className="camera-actions">
+                      <div className="camera-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', width: '100%', marginTop: '1rem' }}>
                         {!cameraActive ? (
                           <button className="btn-primary" onClick={startCamera}>Start Camera</button>
                         ) : (
                           <button className="btn-primary" onClick={capturePhoto}>Capture Photo</button>
                         )}
+                        <button className="btn-secondary" onClick={() => document.getElementById('profile-upload-normal')?.click()}>
+                          <Upload size={18} className="mr-2 inline" /> Upload File
+                        </button>
+                        <input 
+                          id="profile-upload-normal" 
+                          type="file" 
+                          accept="image/*" 
+                          style={{ display: 'none' }} 
+                          onChange={handleFileUpload} 
+                        />
                       </div>
                     </>
                   )}
                 </>
               ) : (
-                <div className="photo-preview-container">
-                  <img src={photoData} alt="Captured" className="photo-preview" />
-                  <button className="btn-secondary mt-2" onClick={retakePhoto}>Retake Photo</button>
+                <div className="photo-preview-container" style={{ textAlign: 'center' }}>
+                  <img src={photoData} alt="Captured" className="photo-preview" style={{ maxWidth: '100%', borderRadius: 'var(--radius-md)' }} />
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+                    <button className="btn-secondary" onClick={retakePhoto}>Retake Camera</button>
+                    <button className="btn-secondary" onClick={() => { 
+                      setPhotoData(null); 
+                      document.getElementById('profile-upload-normal')?.click(); 
+                    }}>
+                      <Upload size={18} className="mr-2 inline" /> Upload Different
+                    </button>
+                  </div>
                 </div>
               )}
               <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>

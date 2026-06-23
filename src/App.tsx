@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { supabase } from './lib/supabase';
 import MainLayout from './components/layout/MainLayout';
 import AuthPage from './pages/Auth';
@@ -11,6 +10,7 @@ import Tables from './pages/Tables';
 import Analytics from './pages/Analytics';
 import StaffManagement from './pages/StaffManagement';
 import Alerts from './pages/Alerts';
+import Settings from './pages/Settings';
 import InstallPrompt from './components/layout/InstallPrompt';
 
 // Role and Session Context
@@ -41,7 +41,8 @@ function App() {
         
         // Automatic Check-in
         if (_event === 'SIGNED_IN') {
-          await supabase.from('staff_attendance').insert([{ admin_id: session.user.id }]);
+          const { error: attError } = await supabase.from('staff_attendance').insert([{ admin_id: session.user.id }]);
+          if (attError) toast.error("Failed to automatically check-in: " + attError.message);
         }
       } else {
         setRole(null);
@@ -58,6 +59,10 @@ function App() {
       .select('role')
       .eq('id', userId)
       .single();
+      
+    if (error) {
+      toast.error("Could not fetch user role. You may be unauthorized.");
+    }
       
     if (data && !error) {
       setRole(data.role);
@@ -92,6 +97,7 @@ function App() {
               role === 'Super Admin' || role === 'Manager' ? <StaffManagement /> : <Navigate to="/" />
             } />
             <Route path="alerts" element={<Alerts />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" />} />

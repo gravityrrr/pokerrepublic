@@ -15,6 +15,10 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="layout-container">
+      <div 
+        className={`mobile-backdrop ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      ></div>
       <Sidebar isOpen={sidebarOpen} />
       <div className={`layout-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <Header toggleSidebar={toggleSidebar} />

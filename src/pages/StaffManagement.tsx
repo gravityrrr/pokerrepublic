@@ -3,6 +3,8 @@ import { Search, ShieldAlert, UserPlus, Shield, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import InviteStaffModal from '../components/staff/InviteStaffModal';
+import { toast } from 'sonner';
+import { exportToCsv } from '../utils/exportCsv';
 
 const StaffManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'directory' | 'attendance'>('directory');
@@ -24,6 +26,10 @@ const StaffManagement: React.FC = () => {
       .select('*')
       .order('created_at', { ascending: false });
       
+    if (error) {
+      toast.error("Failed to fetch staff: " + error.message);
+    }
+      
     if (data && !error) {
       setStaff(data);
     }
@@ -40,6 +46,7 @@ const StaffManagement: React.FC = () => {
       .select('*, admins(full_name, email, role)')
       .order('check_in_time', { ascending: false });
 
+    if (attError) toast.error("Failed to fetch attendance: " + attError.message);
     if (attData) setAttendanceRecords(attData);
     setLoading(false);
   };
@@ -76,6 +83,21 @@ const StaffManagement: React.FC = () => {
         </div>
         
         <div style={{ display: 'flex', gap: '1rem' }}>
+          {activeTab === 'attendance' && attendanceRecords.length > 0 && (
+            <button 
+              className="btn-secondary"
+              onClick={() => exportToCsv('staff_attendance_report', attendanceRecords.map(r => ({
+                Date: r.shift_date,
+                Name: r.admins?.full_name || r.admin_id,
+                Role: r.admins?.role || 'Staff',
+                CheckIn: new Date(r.check_in_time).toLocaleString(),
+                CheckOut: r.check_out_time ? new Date(r.check_out_time).toLocaleString() : 'Active'
+              })))}
+              style={{ margin: 0, borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+            >
+              Export CSV
+            </button>
+          )}
           <button 
             className={`btn-secondary ${activeTab === 'directory' ? 'btn-primary' : ''}`}
             onClick={() => setActiveTab('directory')}
@@ -119,7 +141,7 @@ const StaffManagement: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <td>
+                <td data-label="Staff Member">
                   <div className="player-cell">
                     <div className="avatar" style={{backgroundColor: 'var(--accent-vip)'}}>
                       {person.full_name ? person.full_name.charAt(0) : person.email.charAt(0).toUpperCase()}
@@ -130,13 +152,13 @@ const StaffManagement: React.FC = () => {
                     </div>
                   </div>
                 </td>
-                <td>
+                <td data-label="Role">
                   <span className={`badge ${person.role === 'Super Admin' ? 'badge-vip' : 'badge-regular'}`}>
                     <Shield size={12} className="mr-1 inline" />
                     {person.role}
                   </span>
                 </td>
-                <td>
+                <td data-label="Status">
                   {person.is_active ? (
                     <div className="status-cell">
                       <span className="status-indicator status-active"></span>
@@ -149,14 +171,14 @@ const StaffManagement: React.FC = () => {
                     </div>
                   )}
                 </td>
-                <td>{new Date(person.created_at).toLocaleDateString()}</td>
-                <td>
+                <td data-label="Joined Date">{new Date(person.created_at).toLocaleDateString()}</td>
+                <td data-label="Last Login">
                   <div className="text-muted" style={{display: 'flex', alignItems: 'center'}}>
                     <Clock size={14} className="mr-1" />
                     {person.last_login_at ? new Date(person.last_login_at).toLocaleString() : 'Never'}
                   </div>
                 </td>
-                <td>
+                <td data-label="Actions">
                   <div className="actions-cell">
                     <button className="icon-btn" title="Suspend/Revoke Access"><ShieldAlert size={16} className="text-danger" /></button>
                   </div>
@@ -200,7 +222,7 @@ const StaffManagement: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <td>
+                  <td data-label="Staff Member">
                     <div className="player-cell">
                       <div className="avatar" style={{backgroundColor: 'var(--accent-secondary)'}}>
                         {name.charAt(0)}
@@ -211,13 +233,13 @@ const StaffManagement: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Role">
                     <span className="badge badge-regular">{record.admins?.role || 'Staff'}</span>
                   </td>
-                  <td>{record.shift_date}</td>
-                  <td>{new Date(record.check_in_time).toLocaleTimeString()}</td>
-                  <td>{record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'}</td>
-                  <td>
+                  <td data-label="Shift Date">{record.shift_date}</td>
+                  <td data-label="Check In">{new Date(record.check_in_time).toLocaleTimeString()}</td>
+                  <td data-label="Check Out">{record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'}</td>
+                  <td data-label="Status">
                     {!record.check_out_time ? (
                       <span className="badge badge-success">On Shift</span>
                     ) : (
