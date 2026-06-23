@@ -41,7 +41,7 @@ const StaffManagement: React.FC = () => {
     // Ideally we would do a join, but since admin_id is not a strict FK in the SQL definition currently,
     // we might need to fetch both or if we did a join it might fail. 
     // Let's do a join via supabase's implicit joining if it works, or just fetch and map manually.
-    const { data: attData } = await supabase
+    const { data: attData, error: attError } = await supabase
       .from('staff_attendance')
       .select('*, admins(full_name, email, role)')
       .order('check_in_time', { ascending: false });
