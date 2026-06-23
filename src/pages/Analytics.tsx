@@ -50,6 +50,9 @@ const Analytics: React.FC = () => {
   
   // Leaderboard
   const [topPlayers, setTopPlayers] = useState<any[]>([]);
+  
+  // Staff Performance
+  const [staffPerformance, setStaffPerformance] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -58,18 +61,18 @@ const Analytics: React.FC = () => {
   const fetchAnalyticsData = async () => {
     setLoading(true);
     
-    // Fetch all completed sessions with player names
+    // Fetch all sessions with player names and the admin who checked them in
     const { data: sessions, error } = await supabase
       .from('sessions')
-      .select('*, players(first_name, last_name, profile_image_url)')
-      .eq('status', 'Completed');
+      .select('*, players(first_name, last_name, profile_image_url), admins:checked_in_by(full_name)');
 
     if (!error && sessions) {
       // 1. Calculate Core Metrics
       let totalMins = 0;
-      sessions.forEach(s => totalMins += (s.duration_minutes || 0));
+      const completedSessions = sessions.filter(s => s.status === 'Completed');
+      completedSessions.forEach(s => totalMins += (s.duration_minutes || 0));
       setTotalHours(Math.round(totalMins / 60));
-      setAvgDuration(sessions.length > 0 ? Math.round(totalMins / sessions.length) : 0);
+      setAvgDuration(completedSessions.length > 0 ? Math.round(totalMins / completedSessions.length) : 0);
       setTotalVisits(sessions.length);
 
       // 2. Calculate Peak Hours (Check-ins by Hour of Day)
@@ -119,6 +122,25 @@ const Analytics: React.FC = () => {
         .slice(0, 5); // Top 5
         
       setTopPlayers(leaderboard);
+
+      // 3.5 Calculate Staff Performance
+      const staffCounts: Record<string, any> = {};
+      sessions.forEach(s => {
+        if (!s.checked_in_by) return;
+        const adminId = s.checked_in_by;
+        if (!staffCounts[adminId]) {
+          staffCounts[adminId] = {
+            id: adminId,
+            name: s.admins?.full_name || 'Unknown Staff',
+            checkIns: 0
+          };
+        }
+        staffCounts[adminId].checkIns += 1;
+      });
+
+      const staffLeaderboard = Object.values(staffCounts)
+        .sort((a: any, b: any) => b.checkIns - a.checkIns);
+      setStaffPerformance(staffLeaderboard);
       
       // 4. Activity Over Time (Last 7 Days)
       const days: Record<string, number> = {};

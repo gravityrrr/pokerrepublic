@@ -148,7 +148,7 @@ const Dashboard: React.FC = () => {
           <p className="page-subtitle">Real-time floor operations and analytics</p>
         </div>
         <div className="header-actions">
-          {role === 'Super Admin' && (
+          {role === 'Admin' && (
             <button 
               className="btn-secondary"
               onClick={() => exportToCsv('dashboard_summary_report', [stats])}

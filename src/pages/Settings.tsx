@@ -137,7 +137,7 @@ const Settings: React.FC = () => {
         </div>
         
         <p className="text-muted" style={{ marginBottom: '2rem' }}>
-          Update your password here. If you were given a temporary default password by a Super Admin, it is highly recommended to change it immediately.
+          Update your password here. If you were given a temporary default password by an Admin, it is highly recommended to change it immediately.
         </p>
 
         <form onSubmit={handleUpdatePassword}>

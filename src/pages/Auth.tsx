@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { User, ArrowLeft } from 'lucide-react';
+import { User, ArrowLeft, Mail } from 'lucide-react';
 import './Auth.css';
 
 interface AuthProps {
@@ -30,8 +30,14 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
     });
     
     if (signInError) {
-      toast.error(signInError.message || 'Failed to sign in');
-      setError(signInError.message);
+      let errorMsg = signInError.message || 'Failed to sign in';
+      // Sometimes Supabase returns an empty JSON object string "{}" for certain failures
+      if (errorMsg === '{}' || errorMsg === '[object Object]') {
+        errorMsg = 'Invalid login credentials or user does not exist.';
+      }
+      
+      toast.error(errorMsg);
+      setError(errorMsg);
       setLoading(false);
       return;
     }
@@ -74,7 +80,7 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="e.g. staff1" 
+                placeholder={isStaff ? "e.g. staff1" : "e.g. admin1"} 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ paddingLeft: '2.75rem' }}

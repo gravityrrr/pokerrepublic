@@ -229,6 +229,10 @@
   background-color: var(--bg-secondary);
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -298,6 +302,10 @@
    Responsive
    ================================ */
 @media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+
   .sidebar {
     transform: translateX(-100%);
   }

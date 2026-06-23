@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShieldAlert, UserPlus, Clock } from 'lucide-react';
+import { Search, ShieldAlert, UserPlus, Clock, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import InviteStaffModal from '../components/staff/InviteStaffModal';
@@ -49,6 +49,20 @@ const StaffManagement: React.FC = () => {
     if (attError) toast.error("Failed to fetch attendance: " + attError.message);
     if (attData) setAttendanceRecords(attData);
     setLoading(false);
+  };
+
+  const handleDeleteStaff = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
+    
+    try {
+      const { error } = await supabase.rpc('delete_staff_user', { staff_id: id });
+      if (error) throw error;
+      
+      toast.success(`${name} has been deleted successfully.`);
+      fetchStaffData();
+    } catch (error: any) {
+      toast.error(`Failed to delete ${name}: ${error.message}`);
+    }
   };
 
   const filteredStaff = staff.filter(s => 
@@ -171,6 +185,13 @@ const StaffManagement: React.FC = () => {
                 <td data-label="Actions">
                   <div className="actions-cell">
                     <button className="icon-btn" title="Suspend/Revoke Access"><ShieldAlert size={16} className="text-danger" /></button>
+                    <button 
+                      className="icon-btn" 
+                      title="Delete Staff Account"
+                      onClick={() => handleDeleteStaff(person.id, person.full_name || 'Staff Member')}
+                    >
+                      <Trash2 size={16} className="text-danger" />
+                    </button>
                   </div>
                 </td>
               </motion.tr>

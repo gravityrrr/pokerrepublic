@@ -25,16 +25,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const { session, role } = useContext(AuthContext);
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} />, hideFor: [] },
-    { name: 'Players', path: '/players', icon: <Users size={20} />, hideFor: [] },
-    { name: 'Tables', path: '/tables', icon: <MonitorPlay size={20} />, hideFor: [] },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} />, hideFor: ['Check-in Staff'] },
-    { name: 'Staff Directory', path: '/staff', icon: <Shield size={20} />, hideFor: ['Check-in Staff', 'Analyst', 'Floor Admin'] },
+    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
+    { name: 'Players', path: '/players', icon: <Users size={20} /> },
+    { name: 'Tables', path: '/tables', icon: <MonitorPlay size={20} /> },
+    { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} />, hideFor: ['Staff'] },
+    { name: 'Staff Directory', path: '/staff', icon: <Shield size={20} />, hideFor: ['Staff'] },
   ];
 
   const bottomItems = [
-    { name: 'Alerts', path: '/alerts', icon: <Bell size={20} />, hideFor: [] },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} />, hideFor: ['Check-in Staff', 'Floor Admin'] },
+    { name: 'Alerts', path: '/alerts', icon: <Bell size={20} /> },
+    { name: 'Settings', path: '/settings', icon: <Settings size={20} />, hideFor: ['Staff'] },
   ];
 
   const handleLogout = async () => {
@@ -79,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
       <nav className="sidebar-nav">
         <ul className="nav-list">
-          {navItems.filter(item => !item.hideFor.includes(role || '')).map((item) => (
+          {navItems.filter(item => !(item.hideFor || []).includes(role || '')).map((item) => (
             <li key={item.path} className="nav-item">
               <NavLink 
                 to={item.path} 
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
       <div className="sidebar-bottom">
         <ul className="nav-list">
-          {bottomItems.filter(item => !item.hideFor.includes(role || '')).map((item) => (
+          {bottomItems.filter(item => !(item.hideFor || []).includes(role || '')).map((item) => (
             <li key={item.path} className="nav-item">
               <NavLink 
                 to={item.path} 

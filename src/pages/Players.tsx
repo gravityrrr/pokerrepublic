@@ -119,7 +119,7 @@ const Players: React.FC = () => {
           <p className="page-subtitle">Manage registrations, check-ins, and player analytics</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          {role === 'Super Admin' && players.length > 0 && (
+          {role === 'Admin' && players.length > 0 && (
             <button 
               className="btn-secondary"
               onClick={() => exportToCsv('players_directory_export', players)}
@@ -214,7 +214,7 @@ const Players: React.FC = () => {
                   </td>
                   <td data-label="Actions">
                     <div className="actions-cell">
-                      {role === 'Super Admin' && (
+                      {role === 'Admin' && (
                         <button 
                           className="icon-btn" 
                           title="Export Session History"

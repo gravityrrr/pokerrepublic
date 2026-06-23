@@ -92,10 +92,10 @@ function App() {
             <Route path="players" element={<Players />} />
             <Route path="tables" element={<Tables />} />
             <Route path="analytics" element={
-              role === 'Check-in Staff' ? <Navigate to="/" /> : <Analytics />
+              role === 'Staff' ? <Navigate to="/" /> : <Analytics />
             } />
             <Route path="staff" element={
-              role === 'Super Admin' || role === 'Manager' ? <StaffManagement /> : <Navigate to="/" />
+              role === 'Admin' ? <StaffManagement /> : <Navigate to="/" />
             } />
             <Route path="alerts" element={<Alerts />} />
             <Route path="settings" element={<Settings />} />

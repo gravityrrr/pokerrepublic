@@ -1,9 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Bell, UserCircle, Sun, Moon } from 'lucide-react';
+import { Bell, UserCircle, Sun, Moon, Menu } from 'lucide-react';
 import { AuthContext } from '../../App';
 import { useNavigate } from 'react-router-dom';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const { session, role } = useContext(AuthContext);
   const [isLightMode, setIsLightMode] = useState(false);
   const navigate = useNavigate();
@@ -30,7 +34,10 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="header">
+    <header className="header" style={{ justifyContent: 'space-between' }}>
+      <button className="icon-btn mobile-menu-btn" onClick={toggleSidebar}>
+        <Menu size={24} />
+      </button>
 
       <div className="header-right">
         <button className="icon-btn" onClick={toggleTheme} title="Toggle Theme">

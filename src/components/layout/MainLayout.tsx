@@ -21,7 +21,7 @@ const MainLayout: React.FC = () => {
       ></div>
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <div className={`layout-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <main className="layout-main animate-fade-in">
           <AnimatePresence mode="wait">
             <motion.div

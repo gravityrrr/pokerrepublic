@@ -12,6 +12,7 @@ interface Props {
 const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'Staff' | 'Admin'>('Staff');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -33,15 +34,37 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
       // Create a fake email behind the scenes for Supabase Auth
       const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '')}@poker.local`;
 
-      // Call the secure RPC function created in supabase_rbac_updates.sql
-      const { error } = await supabase.rpc('create_staff_user', {
-        staff_email: fakeEmail,
-        staff_password: password,
-        staff_name: username,
-        staff_role: 'Staff'
+      // We bypass the RPC and use the native Supabase REST API to sign up the user.
+      // This guarantees the password hash and metadata are 100% perfect for GoTrue,
+      // without logging the current Admin out of their session.
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      // Get the Supabase URL and Anon Key from the client instance
+      // @ts-ignore
+      const supabaseUrl = supabase.supabaseUrl;
+      // @ts-ignore
+      const supabaseKey = supabase.supabaseKey;
+
+      const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: fakeEmail,
+          password: password,
+          data: {
+            full_name: username,
+            role: role
+          }
+        })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.msg || errData.message || 'Failed to create staff account');
+      }
       
       toast.success(`Successfully created account for ${username}`);
       
@@ -88,6 +111,19 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
               value={password} 
               onChange={e => setPassword(e.target.value)} 
             />
+          </div>
+
+          <div className="form-group mb-4">
+            <label className="input-label">Account Role</label>
+            <select 
+              className="input-field" 
+              value={role} 
+              onChange={e => setRole(e.target.value as 'Staff' | 'Admin')}
+              style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <option value="Staff">Staff</option>
+              <option value="Admin">Admin</option>
+            </select>
           </div>
           
           <div className="alert-box" style={{ backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
