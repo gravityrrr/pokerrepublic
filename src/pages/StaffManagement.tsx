@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShieldAlert, UserPlus, Shield, Clock } from 'lucide-react';
+import { Search, ShieldAlert, UserPlus, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import InviteStaffModal from '../components/staff/InviteStaffModal';
@@ -120,8 +120,7 @@ const StaffManagement: React.FC = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Staff Member</th>
-              <th>Role</th>
+              <th>Staff Username</th>
               <th>Status</th>
               <th>Joined Date</th>
               <th>Last Login</th>
@@ -141,22 +140,15 @@ const StaffManagement: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <td data-label="Staff Member">
+                <td data-label="Staff Username">
                   <div className="player-cell">
                     <div className="avatar" style={{backgroundColor: 'var(--accent-vip)'}}>
-                      {person.full_name ? person.full_name.charAt(0) : person.email.charAt(0).toUpperCase()}
+                      {person.full_name ? person.full_name.charAt(0).toUpperCase() : '?'}
                     </div>
                     <div>
                       <div className="player-name">{person.full_name || 'Pending Name'}</div>
-                      <div className="player-phone text-muted">{person.email}</div>
                     </div>
                   </div>
-                </td>
-                <td data-label="Role">
-                  <span className={`badge ${person.role === 'Super Admin' ? 'badge-vip' : 'badge-regular'}`}>
-                    <Shield size={12} className="mr-1 inline" />
-                    {person.role}
-                  </span>
                 </td>
                 <td data-label="Status">
                   {person.is_active ? (
@@ -208,9 +200,8 @@ const StaffManagement: React.FC = () => {
               <tr><td colSpan={6} style={{textAlign: 'center', padding: '2rem'}}>No attendance records found.</td></tr>
             ) : attendanceRecords.map((record, idx) => {
               const name = record.admins?.full_name || 'Unknown Staff';
-              const email = record.admins?.email || record.admin_id;
               
-              if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase()) && !email.toLowerCase().includes(searchQuery.toLowerCase())) {
+              if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return null;
               }
 
@@ -229,12 +220,8 @@ const StaffManagement: React.FC = () => {
                       </div>
                       <div>
                         <div className="player-name">{name}</div>
-                        <div className="player-phone text-muted">{email}</div>
                       </div>
                     </div>
-                  </td>
-                  <td data-label="Role">
-                    <span className="badge badge-regular">{record.admins?.role || 'Staff'}</span>
                   </td>
                   <td data-label="Shift Date">{record.shift_date}</td>
                   <td data-label="Check In">{new Date(record.check_in_time).toLocaleTimeString()}</td>

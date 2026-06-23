@@ -10,17 +10,15 @@ interface Props {
 }
 
 const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Check-in Staff');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const handleInvite = async () => {
-    if (!name || !email || !password) {
-      toast.error("Please fill out Name, Email, and Password.");
+    if (!username || !password) {
+      toast.error("Please fill out Username and Password.");
       return;
     }
     
@@ -32,23 +30,24 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
     setIsSubmitting(true);
     
     try {
+      // Create a fake email behind the scenes for Supabase Auth
+      const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '')}@poker.local`;
+
       // Call the secure RPC function created in supabase_rbac_updates.sql
       const { error } = await supabase.rpc('create_staff_user', {
-        staff_email: email.trim(),
+        staff_email: fakeEmail,
         staff_password: password,
-        staff_name: name.trim(),
-        staff_role: role
+        staff_name: username,
+        staff_role: 'Staff'
       });
 
       if (error) throw error;
       
-      toast.success(`Successfully created account for ${name}`);
+      toast.success(`Successfully created account for ${username}`);
       
       // Reset form
-      setName('');
-      setEmail('');
+      setUsername('');
       setPassword('');
-      setRole('Check-in Staff');
       onSuccess();
       onClose();
       
@@ -69,29 +68,19 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
         
         <div className="modal-body">
           <div className="form-group mb-4">
-            <label className="input-label">Full Name</label>
+            <label className="input-label">Staff Username</label>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Sarah Staff" 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
+              placeholder="e.g. staff1" 
+              value={username} 
+              onChange={e => setUsername(e.target.value)} 
             />
-          </div>
-          
-          <div className="form-group mb-4">
-            <label className="input-label">Email Address</label>
-            <input 
-              type="email" 
-              className="input-field" 
-              placeholder="sarah@acespoker.com" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-            />
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>They will use this username to log in.</p>
           </div>
 
           <div className="form-group mb-4">
-            <label className="input-label">Temporary Password</label>
+            <label className="input-label">Password</label>
             <input 
               type="text" 
               className="input-field" 
@@ -99,21 +88,6 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
               value={password} 
               onChange={e => setPassword(e.target.value)} 
             />
-          </div>
-
-          <div className="form-group mb-6">
-            <label className="input-label">Assign Role</label>
-            <select 
-              className="input-field" 
-              value={role} 
-              onChange={e => setRole(e.target.value)}
-            >
-              <option value="Check-in Staff">Check-in Staff (Restricted)</option>
-              <option value="Analyst">Analyst (Read Only Data)</option>
-              <option value="Floor Admin">Floor Admin (Operations)</option>
-              <option value="Manager">Manager (Operations & Settings)</option>
-              <option value="Super Admin">Super Admin (Full Access)</option>
-            </select>
           </div>
           
           <div className="alert-box" style={{ backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>

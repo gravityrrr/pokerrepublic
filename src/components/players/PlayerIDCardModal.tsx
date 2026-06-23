@@ -1,5 +1,7 @@
-import React from 'react';
-import { X, Award, Shield, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Award, Shield, User, LogIn, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 
 interface PlayerIDCardModalProps {
   isOpen: boolean;
@@ -8,6 +10,67 @@ interface PlayerIDCardModalProps {
 }
 
 const PlayerIDCardModal: React.FC<PlayerIDCardModalProps> = ({ isOpen, onClose, player }) => {
+  const [activeSession, setActiveSession] = useState<any | null>(null);
+  const [loadingSession, setLoadingSession] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && player) {
+      checkActiveSession();
+    } else {
+      setActiveSession(null);
+    }
+  }, [isOpen, player]);
+
+  const checkActiveSession = async () => {
+    setLoadingSession(true);
+    const { data } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('player_id', player.id)
+      .eq('status', 'Active')
+      .single();
+    
+    setActiveSession(data || null);
+    setLoadingSession(false);
+  };
+
+  const handleCheckIn = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.from('sessions').insert([{
+      player_id: player.id,
+      checked_in_by: session?.user?.id,
+      status: 'Active'
+    }]).select().single();
+
+    if (error) {
+      toast.error('Failed to check in: ' + error.message);
+    } else {
+      toast.success(`${player.first_name} checked in successfully!`);
+      setActiveSession(data);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!activeSession) return;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const durationMins = Math.round((new Date().getTime() - new Date(activeSession.check_in_time).getTime()) / 60000);
+    
+    const { error } = await supabase.from('sessions').update({
+      status: 'Completed',
+      check_out_time: new Date().toISOString(),
+      checked_out_by: session?.user?.id,
+      duration_minutes: durationMins
+    }).eq('id', activeSession.id);
+
+    if (error) {
+      toast.error('Failed to check out: ' + error.message);
+    } else {
+      toast.info(`${player.first_name} checked out. Duration: ${durationMins} mins.`);
+      setActiveSession(null);
+    }
+  };
+
   if (!isOpen || !player) return null;
 
   const isVIP = player.loyaltyScore > 100;
@@ -119,6 +182,27 @@ const PlayerIDCardModal: React.FC<PlayerIDCardModalProps> = ({ isOpen, onClose, 
                 <span style={{ fontSize: '1rem', color: 'white', letterSpacing: '2px', fontFamily: 'monospace' }}>
                   {player.member_id || 'PENDING'}
                 </span>
+              </div>
+              <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                {loadingSession ? (
+                  <span style={{ color: 'var(--text-muted)' }}>Loading status...</span>
+                ) : activeSession ? (
+                  <button 
+                    onClick={handleCheckOut}
+                    className="btn-secondary" 
+                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}
+                  >
+                    <LogOut size={16} /> Check Out
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleCheckIn}
+                    className="btn-primary" 
+                    style={{ backgroundColor: 'var(--accent-success)', color: 'white', borderColor: 'var(--accent-success)' }}
+                  >
+                    <LogIn size={16} /> Check In
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -15,10 +15,12 @@ const Players: React.FC = () => {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
   const [players, setPlayers] = useState<any[]>([]);
+  const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPlayers();
+    fetchActiveSessions();
 
     const channel = supabase
       .channel('public:players')
@@ -33,10 +35,25 @@ const Players: React.FC = () => {
       })
       .subscribe();
 
+    const sessionChannel = supabase
+      .channel('public:sessions_players')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => {
+        fetchActiveSessions();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(sessionChannel);
     };
   }, []);
+
+  const fetchActiveSessions = async () => {
+    const { data } = await supabase.from('sessions').select('player_id').eq('status', 'Active');
+    if (data) {
+      setActiveSessions(new Set(data.map(s => s.player_id)));
+    }
+  };
 
   const fetchPlayers = async () => {
     setLoading(true);
@@ -182,8 +199,8 @@ const Players: React.FC = () => {
                   </td>
                   <td data-label="Status">
                     <div className="status-cell">
-                      <span className="status-indicator status-active"></span>
-                      <span>Verified</span>
+                      <span className={`status-indicator ${activeSessions.has(player.id) ? 'status-active' : 'status-offline'}`} style={{ backgroundColor: activeSessions.has(player.id) ? 'var(--accent-success)' : 'var(--text-muted)' }}></span>
+                      <span>{activeSessions.has(player.id) ? 'Currently Playing' : 'Offline'}</span>
                     </div>
                   </td>
                   <td data-label="Loyalty">

@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { exportToCsv } from '../utils/exportCsv';
 import './Dashboard.css';
 import { AuthContext } from '../App';
+import { useNavigate } from 'react-router-dom';
+import CheckInModal from '../components/players/CheckInModal';
 import {
   BarChart,
   Bar,
@@ -24,16 +26,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const data = [
-  { time: '12 PM', players: 12 },
-  { time: '2 PM', players: 18 },
-  { time: '4 PM', players: 25 },
-  { time: '6 PM', players: 45 },
-  { time: '8 PM', players: 68 },
-  { time: '10 PM', players: 82 },
-  { time: '12 AM', players: 75 },
-  { time: '2 AM', players: 40 },
-];
 
 const StatCard = ({ title, value, icon, trend, trendUp, delay }: any) => (
   <div className={`stat-card card card-hover`} style={{ animationDelay: `${delay}s` }}>
@@ -54,16 +46,17 @@ const StatCard = ({ title, value, icon, trend, trendUp, delay }: any) => (
 
 const Dashboard: React.FC = () => {
   const { role } = React.useContext(AuthContext);
+  const navigate = useNavigate();
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [stats, setStats] = useState({
     total_registered_players: 0,
     players_currently_playing: 0,
     sessions_today: 0,
     avg_session_duration_today_mins: 0
   });
+  const [chartData, setChartData] = useState<any[]>([]);
   
-  const [feed, setFeed] = useState<any[]>([
-    { type: 'alert', text: 'Dashboard is listening for live updates...', time: 'Just now', isVIP: false }
-  ]);
+  const [feed, setFeed] = useState<any[]>([]);
 
   const fetchStats = async () => {
     const { data, error } = await supabase.from('vw_dashboard_summary').select('*').single();
@@ -72,6 +65,50 @@ const Dashboard: React.FC = () => {
     }
     if (data) {
       setStats(data);
+    }
+
+    // Fetch real chart data (Check-ins per hour for today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data: sessionData } = await supabase
+      .from('sessions')
+      .select('check_in_time')
+      .gte('check_in_time', today.toISOString());
+      
+    if (sessionData) {
+      const hourCounts: Record<number, number> = {};
+      sessionData.forEach((s: any) => {
+        const hour = new Date(s.check_in_time).getHours();
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      });
+      
+      const newChartData = [];
+      const currentHour = new Date().getHours();
+      for (let i = Math.max(0, currentHour - 11); i <= currentHour; i++) {
+        const ampm = i >= 12 ? 'PM' : 'AM';
+        const displayHour = i % 12 === 0 ? 12 : i % 12;
+        newChartData.push({
+          time: `${displayHour} ${ampm}`,
+          checkins: hourCounts[i] || 0
+        });
+      }
+      setChartData(newChartData);
+    }
+
+    // Fetch initial feed history
+    const { data: recentAlerts } = await supabase
+      .from('alerts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+      
+    if (recentAlerts) {
+      setFeed(recentAlerts.map(a => ({
+        type: a.severity?.toLowerCase() === 'critical' ? 'alert' : 'checkin',
+        text: a.title,
+        time: new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isVIP: a.severity?.toLowerCase() === 'critical'
+      })));
     }
   };
 
@@ -119,7 +156,9 @@ const Dashboard: React.FC = () => {
               Export Report
             </button>
           )}
-          <button className="btn-primary">New Check-in</button>
+          <button className="btn-primary" onClick={() => setIsCheckInOpen(true)}>
+            New Check-in
+          </button>
         </div>
       </div>
 
@@ -168,16 +207,16 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} allowDecimals={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-color)', borderRadius: '8px' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   cursor={{ fill: 'var(--bg-tertiary)' }}
                 />
-                <Bar dataKey="players" fill="var(--accent-primary)" radius={[4, 4, 0, 0]} barSize={30} />
+                <Bar dataKey="checkins" name="Check-ins" fill="var(--accent-primary)" radius={[4, 4, 0, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -186,7 +225,7 @@ const Dashboard: React.FC = () => {
         <div className="activity-feed card animate-slide-up" style={{ animationDelay: '0.6s' }}>
           <div className="section-header">
             <h3 className="section-title">Live Activity Feed</h3>
-            <button className="btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>View All</button>
+            <button className="btn-secondary" onClick={() => navigate('/alerts')} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>View All</button>
           </div>
           <div className="feed-list">
             {feed.map((item, idx) => (
@@ -208,6 +247,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <CheckInModal isOpen={isCheckInOpen} onClose={() => setIsCheckInOpen(false)} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { User } from 'lucide-react';
 import './Auth.css';
 
 interface AuthProps {
@@ -20,8 +21,8 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
     setLoading(true);
     setError('');
     
-    // Automatically append domain if user just types 'staff1' or 'admin'
-    const loginEmail = email.includes('@') ? email : `${email}@pokerrepublic.com`;
+    // Automatically convert username to fake email if they didn't provide an @ symbol
+    const loginEmail = email.includes('@') ? email : `${email.toLowerCase().replace(/\s+/g, '')}@poker.local`;
     
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
@@ -58,16 +59,19 @@ const AuthPage: React.FC<AuthProps> = ({ type }) => {
         {error && <div style={{ color: 'var(--accent-danger)', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>{error}</div>}
 
         <form onSubmit={handleLogin} className="auth-form">
-          <div className="form-group">
-            <label className="input-label">Email Address</label>
-            <input 
-              type="email" 
-              className="input-field" 
-              placeholder="admin@acespoker.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <div className="form-group mb-4">
+            <label className="input-label">Username</label>
+            <div style={{ position: 'relative' }}>
+              <User size={18} className="input-icon" />
+              <input 
+                type="text" 
+                className="input-field with-icon" 
+                placeholder="e.g. staff1" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
           
           <div className="form-group">
