@@ -1,0 +1,90 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { supabase } from './lib/supabase';
+import MainLayout from './components/layout/MainLayout';
+import AuthPage from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import Players from './pages/Players';
+import Tables from './pages/Tables';
+import Analytics from './pages/Analytics';
+import StaffManagement from './pages/StaffManagement';
+
+// Role and Session Context
+export const AuthContext = React.createContext<{
+  session: any | null;
+  role: string | null;
+  loading: boolean;
+}>({ session: null, role: null, loading: true });
+
+function App() {
+  const [session, setSession] = useState<any | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Initial session fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) fetchRole(session.user.id);
+      else setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        fetchRole(session.user.id);
+      } else {
+        setRole(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('admins')
+      .select('role')
+      .eq('id', userId)
+      .single();
+      
+    if (data && !error) {
+      setRole(data.role);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)', color: 'white' }}>Loading...</div>;
+  }
+
+  return (
+    <AuthContext.Provider value={{ session, role, loading }}>
+      <Toaster position="top-right" theme="system" richColors />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/" />} />
+          
+          <Route path="/" element={session ? <MainLayout /> : <Navigate to="/auth" />}>
+            <Route index element={<Dashboard />} />
+            <Route path="players" element={<Players />} />
+            <Route path="tables" element={<Tables />} />
+            <Route path="analytics" element={
+              role === 'Check-in Staff' ? <Navigate to="/" /> : <Analytics />
+            } />
+            <Route path="staff" element={
+              role === 'Super Admin' || role === 'Manager' ? <StaffManagement /> : <Navigate to="/" />
+            } />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthContext.Provider>
+  );
+}
+
+export default App;
