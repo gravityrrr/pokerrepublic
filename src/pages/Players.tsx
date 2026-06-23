@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, MoreVertical, Edit, Info } from 'lucide-react';
+import { Search, UserPlus, MoreVertical, Edit, Info, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import PlayerRegistrationModal from '../components/players/PlayerRegistrationModal';
 import PlayerIDCardModal from '../components/players/PlayerIDCardModal';
 import { toast } from 'sonner';
+import { exportToCsv } from '../utils/exportCsv';
+import { AuthContext } from '../App';
 import './Players.css';
 
 const Players: React.FC = () => {
+  const { role } = React.useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
@@ -52,11 +55,44 @@ const Players: React.FC = () => {
     setLoading(false);
   };
 
-  const filteredPlayers = players.filter(p => 
-    p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.phone_number.includes(searchQuery)
-  );
+  const handleExportPlayerHistory = async (playerId: string, playerName: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*, poker_tables(name)')
+        .eq('player_id', playerId)
+        .order('check_in_time', { ascending: false });
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        toast.info(`No session history found for ${playerName}`);
+        return;
+      }
+
+      const formattedData = data.map(session => ({
+        'Player Name': playerName,
+        'Table Name': session.poker_tables?.name || 'Unknown Table',
+        'Check In': new Date(session.check_in_time).toLocaleString(),
+        'Check Out': session.check_out_time ? new Date(session.check_out_time).toLocaleString() : 'Active',
+        'Duration (Mins)': session.duration_minutes || '-',
+        'Status': session.status
+      }));
+
+      exportToCsv(`${playerName.replace(/\s+/g, '_')}_Session_History`, formattedData);
+      toast.success(`Exported session history for ${playerName}`);
+    } catch (err: any) {
+      toast.error(`Failed to export history: ${err.message}`);
+    }
+  };
+
+  const filteredPlayers = players.filter(p => {
+    const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return fullName.includes(query) || 
+           p.phone_number.includes(searchQuery) ||
+           (p.member_id && p.member_id.toLowerCase().includes(query));
+  });
 
   return (
     <div className="players-container animate-fade-in">
@@ -65,10 +101,20 @@ const Players: React.FC = () => {
           <h1 className="page-title">Player Directory</h1>
           <p className="page-subtitle">Manage registrations, check-ins, and player analytics</p>
         </div>
-        <button className="btn-primary" onClick={() => setIsRegistrationOpen(true)}>
-          <UserPlus size={18} />
-          Register New Player
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          {role === 'Super Admin' && players.length > 0 && (
+            <button 
+              className="btn-secondary"
+              onClick={() => exportToCsv('players_directory_export', players)}
+            >
+              Export CSV
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => setIsRegistrationOpen(true)}>
+            <UserPlus size={18} />
+            Register New Player
+          </button>
+        </div>
       </div>
 
       <div className="card filters-card">
@@ -152,6 +198,18 @@ const Players: React.FC = () => {
                   </td>
                   <td data-label="Actions">
                     <div className="actions-cell">
+                      {role === 'Super Admin' && (
+                        <button 
+                          className="icon-btn" 
+                          title="Export Session History"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExportPlayerHistory(player.id, `${player.first_name} ${player.last_name}`);
+                          }}
+                        >
+                          <Download size={16} />
+                        </button>
+                      )}
                       <button className="icon-btn" title="View Details"><Info size={16} /></button>
                       <button className="icon-btn" title="Edit Player"><Edit size={16} /></button>
                       <button className="icon-btn" title="More"><MoreVertical size={16} /></button>

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Menu, Search, Bell, UserCircle, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, UserCircle, Sun, Moon } from 'lucide-react';
 import { AuthContext } from '../../App';
 
 interface HeaderProps {
@@ -37,14 +37,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         <button className="menu-btn" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <div className="search-bar">
-          <Search size={18} className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Search players by name, phone, or ID (Press '/')" 
-            className="search-input"
-          />
-        </div>
       </div>
       
       <div className="header-right">

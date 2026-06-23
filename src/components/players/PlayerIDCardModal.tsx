@@ -77,25 +77,23 @@ const PlayerIDCardModal: React.FC<PlayerIDCardModalProps> = ({ isOpen, onClose, 
           />
 
           {/* Header */}
-          <div style={{ padding: '2rem 2rem 1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div>
-              <img src="/logo.png" alt="Poker Republic" style={{ height: '40px', marginBottom: '0.5rem' }} />
-              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '2px', color: isVIP ? '#ffd700' : 'var(--text-muted)' }}>
-                {isVIP ? 'VIP Member' : 'Official Member'}
-              </div>
+          <div style={{ padding: '2rem 2rem 1rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <img src="/logo.png" alt="Poker Republic" style={{ height: '55px', marginBottom: '0.75rem' }} />
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: isVIP ? '#ffd700' : 'var(--text-muted)' }}>
+              {isVIP ? 'VIP Member' : 'Official Member'}
             </div>
-            {isVIP && <Award size={32} color="#ffd700" />}
+            {isVIP && <Award size={24} color="#ffd700" style={{ marginTop: '0.5rem' }} />}
           </div>
 
           {/* Photo & Identity */}
           <div style={{ padding: '2rem', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
             <div 
               style={{
-                width: '140px',
-                height: '140px',
+                width: '180px',
+                height: '180px',
                 borderRadius: '50%',
                 background: borderGradient,
-                padding: '4px',
+                padding: '5px',
                 boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)'
               }}
             >
@@ -107,13 +105,13 @@ const PlayerIDCardModal: React.FC<PlayerIDCardModalProps> = ({ isOpen, onClose, 
                 />
               ) : (
                 <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <User size={64} color="var(--text-muted)" />
+                  <User size={80} color="var(--text-muted)" />
                 </div>
               )}
             </div>
 
             <div style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <h2 style={{ fontSize: '1.6rem', margin: '0 0 0.5rem 0', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {player.first_name} {player.last_name}
               </h2>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '20px' }}>
