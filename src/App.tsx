@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { supabase } from './lib/supabase';
 import MainLayout from './components/layout/MainLayout';
 import AuthPage from './pages/Auth';
+import AuthChoice from './pages/AuthChoice';
 import Dashboard from './pages/Dashboard';
 import Players from './pages/Players';
 import Tables from './pages/Tables';
@@ -78,7 +79,7 @@ function App() {
         <Routes>
           <Route path="/auth/staff" element={!session ? <AuthPage type="staff" /> : <Navigate to="/" />} />
           <Route path="/auth/admin" element={!session ? <AuthPage type="admin" /> : <Navigate to="/" />} />
-          <Route path="/auth" element={<Navigate to="/auth/staff" />} />
+          <Route path="/auth" element={!session ? <AuthChoice /> : <Navigate to="/" />} />
           
           <Route path="/" element={session ? <MainLayout /> : <Navigate to="/auth" />}>
             <Route index element={<Dashboard />} />
