@@ -8,7 +8,6 @@ import {
   Settings,
   Bell,
   LogOut,
-  Club,
   Shield
 } from 'lucide-react';
 import { AuthContext } from '../../App';

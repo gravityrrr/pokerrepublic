@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserPlus, MoreVertical, Edit, ShieldAlert } from 'lucide-react';
+import { Search, UserPlus, MoreVertical, Edit, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import PlayerRegistrationModal from '../components/players/PlayerRegistrationModal';
