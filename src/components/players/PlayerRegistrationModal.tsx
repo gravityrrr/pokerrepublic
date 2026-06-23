@@ -13,6 +13,7 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
   const [step, setStep] = useState(1); // 1: Info, 2: Photo, 3: Documents
   
   // Form State
@@ -37,6 +38,7 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   const startCamera = async () => {
     try {
+      setCameraError(false);
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -44,7 +46,8 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      alert("Could not access camera. Please use HTTPS or check permissions.");
+      setCameraError(true);
+      // alert("Could not access camera. Please use HTTPS or check permissions.");
     }
   };
 
@@ -72,7 +75,20 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   const retakePhoto = () => {
     setPhotoData(null);
-    startCamera();
+    if (!cameraError) {
+      startCamera();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoData(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Helper to convert base64 data URL to Blob for Supabase Storage
@@ -220,22 +236,41 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <div className="camera-section">
               {!photoData ? (
                 <>
-                  <div className="video-container">
-                    <video ref={videoRef} autoPlay playsInline className={cameraActive ? 'active' : 'hidden'}></video>
-                    {!cameraActive && (
-                      <div className="camera-placeholder">
-                        <Camera size={48} className="text-muted" />
-                        <p>Camera is inactive</p>
+                  {cameraError ? (
+                    <div className="camera-placeholder" style={{ padding: '2rem', textAlign: 'center', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-lg)' }}>
+                      <Camera size={48} className="text-muted mb-2" />
+                      <p className="mb-4" style={{ color: 'var(--accent-warning)' }}>Camera access denied or unavailable. Please upload a photo instead.</p>
+                      <button className="btn-secondary" onClick={() => document.getElementById('profile-upload')?.click()}>
+                        <Upload size={18} className="mr-2" /> Upload Photo
+                      </button>
+                      <input 
+                        id="profile-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleFileUpload} 
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="video-container">
+                        <video ref={videoRef} autoPlay playsInline className={cameraActive ? 'active' : 'hidden'}></video>
+                        {!cameraActive && (
+                          <div className="camera-placeholder">
+                            <Camera size={48} className="text-muted" />
+                            <p>Camera is inactive</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="camera-actions">
-                    {!cameraActive ? (
-                      <button className="btn-primary" onClick={startCamera}>Start Camera</button>
-                    ) : (
-                      <button className="btn-primary" onClick={capturePhoto}>Capture Photo</button>
-                    )}
-                  </div>
+                      <div className="camera-actions">
+                        {!cameraActive ? (
+                          <button className="btn-primary" onClick={startCamera}>Start Camera</button>
+                        ) : (
+                          <button className="btn-primary" onClick={capturePhoto}>Capture Photo</button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="photo-preview-container">

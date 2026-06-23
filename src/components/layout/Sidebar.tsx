@@ -19,7 +19,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const { role } = useContext(AuthContext);
+  const { session, role } = useContext(AuthContext);
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} />, hideFor: [] },
@@ -35,15 +35,34 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   ];
 
   const handleLogout = async () => {
+    try {
+      const { data: attendance } = await supabase
+        .from('staff_attendance')
+        .select('id')
+        .eq('admin_id', session?.user?.id)
+        .is('check_out_time', null)
+        .order('check_in_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (attendance) {
+        await supabase
+          .from('staff_attendance')
+          .update({ check_out_time: new Date().toISOString() })
+          .eq('id', attendance.id);
+      }
+    } catch (e) {
+      console.error("Failed to checkout", e);
+    }
     await supabase.auth.signOut();
   };
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
-        <div className="brand-logo">
-          <Club size={28} className="brand-icon" />
-          {isOpen && <span className="brand-text">Aces Admin</span>}
+        <div className="brand-logo" style={{ padding: '0.5rem 0' }}>
+          <img src="/logo.png" alt="Poker Republic" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+          {isOpen && <span className="brand-text" style={{ fontSize: '1.1rem' }}>Poker Republic</span>}
         </div>
       </div>
 

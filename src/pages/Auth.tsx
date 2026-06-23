@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
-import { Club } from 'lucide-react';
+import { Club, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 
-const AuthPage: React.FC = () => {
+interface AuthProps {
+  type: 'staff' | 'admin';
+}
+
+const AuthPage: React.FC<AuthProps> = ({ type }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
+    // Automatically append domain if user just types 'staff1' or 'admin'
+    const loginEmail = email.includes('@') ? email : `${email}@pokerrepublic.com`;
+    
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+      email: loginEmail,
       password
     });
     
@@ -28,17 +36,20 @@ const AuthPage: React.FC = () => {
     
     // AuthContext will automatically pick up the session change
     setLoading(false);
+    navigate('/');
   };
 
+  const isStaff = type === 'staff';
+
   return (
-    <div className="auth-container">
-      <div className="auth-card card animate-slide-up">
+    <div className={`auth-container ${isStaff ? 'auth-staff-bg' : 'auth-admin-bg'}`}>
+      <div className="auth-card glass-panel" style={{ borderTop: `4px solid ${isStaff ? 'var(--accent-success)' : 'var(--accent-vip)'}`}}>
         <div className="auth-header">
-          <div className="auth-logo">
-            <Club size={48} className="text-primary" />
+          <div className="auth-logo-img-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <img src="/logo.png" alt="Poker Republic" style={{ height: '60px', objectFit: 'contain' }} />
           </div>
-          <h1 className="auth-title">Aces Admin Portal</h1>
-          <p className="auth-subtitle">Authorized personnel only</p>
+          <h1 className="auth-title" style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>Poker Republic</h1>
+          <p className="auth-subtitle">{isStaff ? 'Staff Check-in Portal' : 'Admin Operations'}</p>
         </div>
 
         {error && <div style={{ color: 'var(--accent-danger)', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>{error}</div>}

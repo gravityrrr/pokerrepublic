@@ -5,14 +5,17 @@ import { motion } from 'framer-motion';
 import InviteStaffModal from '../components/staff/InviteStaffModal';
 
 const StaffManagement: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'directory' | 'attendance'>('directory');
   const [staff, setStaff] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   useEffect(() => {
-    fetchStaff();
-  }, []);
+    if (activeTab === 'directory') fetchStaff();
+    else fetchAttendance();
+  }, [activeTab]);
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -24,6 +27,20 @@ const StaffManagement: React.FC = () => {
     if (data && !error) {
       setStaff(data);
     }
+    setLoading(false);
+  };
+
+  const fetchAttendance = async () => {
+    setLoading(true);
+    // Ideally we would do a join, but since admin_id is not a strict FK in the SQL definition currently,
+    // we might need to fetch both or if we did a join it might fail. 
+    // Let's do a join via supabase's implicit joining if it works, or just fetch and map manually.
+    const { data: attData } = await supabase
+      .from('staff_attendance')
+      .select('*, admins(full_name, email, role)')
+      .order('check_in_time', { ascending: false });
+
+    if (attData) setAttendanceRecords(attData);
     setLoading(false);
   };
 
@@ -51,15 +68,33 @@ const StaffManagement: React.FC = () => {
           <Search size={18} className="text-muted" />
           <input 
             type="text" 
-            placeholder="Search by name, email, or role..." 
+            placeholder={activeTab === 'directory' ? "Search by name, email, or role..." : "Search attendance records..."} 
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            className={`btn-secondary ${activeTab === 'directory' ? 'btn-primary' : ''}`}
+            onClick={() => setActiveTab('directory')}
+            style={{ margin: 0 }}
+          >
+            Directory
+          </button>
+          <button 
+            className={`btn-secondary ${activeTab === 'attendance' ? 'btn-primary' : ''}`}
+            onClick={() => setActiveTab('attendance')}
+            style={{ margin: 0 }}
+          >
+            Attendance Reports
+          </button>
+        </div>
       </div>
 
-      <div className="table-container glass-panel">
+      {activeTab === 'directory' ? (
+      <div className="table-container glass-panel animate-slide-up">
         <table className="data-table">
           <thead>
             <tr>
@@ -131,6 +166,71 @@ const StaffManagement: React.FC = () => {
           </tbody>
         </table>
       </div>
+      ) : (
+      <div className="table-container glass-panel animate-slide-up">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Staff Member</th>
+              <th>Role</th>
+              <th>Shift Date</th>
+              <th>Check In</th>
+              <th>Check Out</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} style={{textAlign: 'center', padding: '2rem'}}>Loading attendance records...</td></tr>
+            ) : attendanceRecords.length === 0 ? (
+              <tr><td colSpan={6} style={{textAlign: 'center', padding: '2rem'}}>No attendance records found.</td></tr>
+            ) : attendanceRecords.map((record, idx) => {
+              const name = record.admins?.full_name || 'Unknown Staff';
+              const email = record.admins?.email || record.admin_id;
+              
+              if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase()) && !email.toLowerCase().includes(searchQuery.toLowerCase())) {
+                return null;
+              }
+
+              return (
+                <motion.tr 
+                  key={record.id} 
+                  className="table-row-hover"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <td>
+                    <div className="player-cell">
+                      <div className="avatar" style={{backgroundColor: 'var(--accent-secondary)'}}>
+                        {name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="player-name">{name}</div>
+                        <div className="player-phone text-muted">{email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-regular">{record.admins?.role || 'Staff'}</span>
+                  </td>
+                  <td>{record.shift_date}</td>
+                  <td>{new Date(record.check_in_time).toLocaleTimeString()}</td>
+                  <td>{record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'}</td>
+                  <td>
+                    {!record.check_out_time ? (
+                      <span className="badge badge-success">On Shift</span>
+                    ) : (
+                      <span className="badge badge-regular" style={{backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', borderColor: 'var(--border-color)'}}>Completed</span>
+                    )}
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      )}
 
       <InviteStaffModal 
         isOpen={isInviteOpen} 

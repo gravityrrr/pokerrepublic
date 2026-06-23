@@ -10,6 +10,7 @@ const Players: React.FC = () => {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
   useEffect(() => {
     fetchPlayers();
@@ -76,13 +77,26 @@ const Players: React.FC = () => {
               className="search-input-large"
             />
           </div>
-          <button className="btn-secondary filter-btn">
-            <Filter size={18} />
-            Filters
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              className={`btn-secondary ${viewMode === 'table' ? 'btn-primary' : ''}`}
+              onClick={() => setViewMode('table')}
+              style={{ margin: 0 }}
+            >
+              Table View
+            </button>
+            <button 
+              className={`btn-secondary ${viewMode === 'cards' ? 'btn-primary' : ''}`}
+              onClick={() => setViewMode('cards')}
+              style={{ margin: 0 }}
+            >
+              ID Cards
+            </button>
+          </div>
         </div>
       </div>
 
+      {viewMode === 'table' ? (
       <div className="card table-card animate-slide-up">
         <div className="table-responsive">
           <table className="data-table">
@@ -148,6 +162,58 @@ const Players: React.FC = () => {
           </table>
         </div>
       </div>
+      ) : (
+      <div className="id-cards-grid animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+        {loading ? (
+          <div style={{textAlign: 'center', gridColumn: '1/-1', padding: '2rem'}}>Loading players...</div>
+        ) : filteredPlayers.length === 0 ? (
+          <div style={{textAlign: 'center', gridColumn: '1/-1', padding: '2rem'}}>No players found.</div>
+        ) : filteredPlayers.map((player, idx) => (
+          <motion.div 
+            key={player.id}
+            className="id-card glass-panel"
+            style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', borderTop: '4px solid var(--accent-primary)', position: 'relative', overflow: 'hidden' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.05, pointerEvents: 'none' }}>
+              <img src="/logo.png" alt="watermark" style={{ width: '150px' }} />
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div>
+                <img src="/logo.png" alt="Poker Republic" style={{ height: '30px', marginBottom: '0.5rem' }} />
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)' }}>Official Member</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID Number</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '2px' }}>{player.member_id || 'PENDING'}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              {player.profile_image_url ? (
+                <img src={player.profile_image_url} alt={player.first_name} style={{ width: '80px', height: '80px', borderRadius: 'var(--radius-md)', objectFit: 'cover', border: '2px solid var(--border-color)' }} />
+              ) : (
+                <div style={{ width: '80px', height: '80px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: 'var(--text-muted)', border: '2px solid var(--border-color)' }}>
+                  {player.first_name.charAt(0)}
+                </div>
+              )}
+              
+              <div>
+                <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem' }}>{player.first_name} {player.last_name}</h3>
+                <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{player.phone_number}</p>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span className="badge badge-success">Verified</span>
+                  {player.loyaltyScore > 100 && <span className="badge badge-vip">VIP</span>}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      )}
       
       <PlayerRegistrationModal 
         isOpen={isRegistrationOpen} 

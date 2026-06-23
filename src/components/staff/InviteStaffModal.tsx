@@ -12,14 +12,20 @@ interface Props {
 const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('Check-in Staff');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const handleInvite = async () => {
-    if (!name || !email) {
-      toast.error("Please fill out Name and Email.");
+    if (!name || !email || !password) {
+      toast.error("Please fill out Name, Email, and Password.");
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
       return;
     }
     
@@ -29,7 +35,7 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
       // Call the secure RPC function created in supabase_rbac_updates.sql
       const { error } = await supabase.rpc('create_staff_user', {
         staff_email: email.trim(),
-        staff_password: '123456', // Default temporary password
+        staff_password: password,
         staff_name: name.trim(),
         staff_role: role
       });
@@ -41,6 +47,7 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
       // Reset form
       setName('');
       setEmail('');
+      setPassword('');
       setRole('Check-in Staff');
       onSuccess();
       onClose();
@@ -83,6 +90,17 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
             />
           </div>
 
+          <div className="form-group mb-4">
+            <label className="input-label">Temporary Password</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Enter a secure password..." 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+            />
+          </div>
+
           <div className="form-group mb-6">
             <label className="input-label">Assign Role</label>
             <select 
@@ -100,8 +118,7 @@ const InviteStaffModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
           
           <div className="alert-box" style={{ backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <strong>Note:</strong> The user will be assigned a default password of <code style={{color: 'var(--text-primary)'}}>123456</code>. 
-              They should be advised to log in and change their password immediately.
+              <strong>Note:</strong> Make sure to communicate this password to the staff member so they can log in.
             </p>
           </div>
         </div>

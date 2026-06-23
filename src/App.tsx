@@ -9,6 +9,8 @@ import Players from './pages/Players';
 import Tables from './pages/Tables';
 import Analytics from './pages/Analytics';
 import StaffManagement from './pages/StaffManagement';
+import Alerts from './pages/Alerts';
+import InstallPrompt from './components/layout/InstallPrompt';
 
 // Role and Session Context
 export const AuthContext = React.createContext<{
@@ -31,10 +33,15 @@ function App() {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session) {
-        fetchRole(session.user.id);
+        await fetchRole(session.user.id);
+        
+        // Automatic Check-in
+        if (_event === 'SIGNED_IN') {
+          await supabase.from('staff_attendance').insert([{ admin_id: session.user.id }]);
+        }
       } else {
         setRole(null);
         setLoading(false);
@@ -53,6 +60,8 @@ function App() {
       
     if (data && !error) {
       setRole(data.role);
+    } else {
+      setRole('Unauthorized');
     }
     setLoading(false);
   };
@@ -64,9 +73,12 @@ function App() {
   return (
     <AuthContext.Provider value={{ session, role, loading }}>
       <Toaster position="top-right" theme="system" richColors />
+      <InstallPrompt />
       <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/" />} />
+          <Route path="/auth/staff" element={!session ? <AuthPage type="staff" /> : <Navigate to="/" />} />
+          <Route path="/auth/admin" element={!session ? <AuthPage type="admin" /> : <Navigate to="/" />} />
+          <Route path="/auth" element={<Navigate to="/auth/staff" />} />
           
           <Route path="/" element={session ? <MainLayout /> : <Navigate to="/auth" />}>
             <Route index element={<Dashboard />} />
@@ -78,6 +90,7 @@ function App() {
             <Route path="staff" element={
               role === 'Super Admin' || role === 'Manager' ? <StaffManagement /> : <Navigate to="/" />
             } />
+            <Route path="alerts" element={<Alerts />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" />} />
