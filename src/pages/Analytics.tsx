@@ -305,10 +305,8 @@ const Analytics: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                          {Math.floor(player.totalMins / 60)}h {player.totalMins % 60}m
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>Total Time</div>
+                        <div style={{ fontWeight: 'bold' }}>{Math.round(player.totalMins / 60)}h</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{player.visits} visits</div>
                       </div>
                     </div>
                   ))}
@@ -316,6 +314,55 @@ const Analytics: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Staff Performance */}
+          <div className="card animate-slide-up" style={{ animationDelay: '0.7s', marginTop: '2rem' }}>
+            <div className="section-header">
+              <h3 className="section-title"><Shield size={18} className="mr-2" style={{ display: 'inline' }} /> Staff Performance (Check-ins)</h3>
+            </div>
+            <div style={{ marginTop: '1rem' }}>
+              {staffPerformance.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem 0' }}>No staff check-in data available yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {staffPerformance.map((staffMember, index) => (
+                    <div key={staffMember.id} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      padding: '1rem', 
+                      backgroundColor: 'var(--bg-secondary)', 
+                      borderRadius: 'var(--radius-md)'
+                    }}>
+                      <div style={{ 
+                        width: '30px', 
+                        height: '30px', 
+                        borderRadius: '50%', 
+                        backgroundColor: 'var(--bg-tertiary)',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        marginRight: '1rem'
+                      }}>
+                        {index + 1}
+                      </div>
+                      <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{staffMember.name}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>{staffMember.checkIns}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>check-ins</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
         </>
       )}
     </div>
