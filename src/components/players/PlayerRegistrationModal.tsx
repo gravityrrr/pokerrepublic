@@ -106,8 +106,8 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   const handleComplete = async () => {
-    if (!firstName || !lastName || !phone) {
-      toast.error("Please fill out First Name, Last Name, and Phone Number.");
+    if (!firstName || !phone) {
+      toast.error("Please fill out First Name and Phone Number.");
       return;
     }
     
@@ -148,10 +148,30 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
         kycStoragePath = filePath;
       }
 
+      // Generate ID like A001
+      const firstLetter = firstName.charAt(0).toUpperCase();
+      const { data: existingIds, error: idError } = await supabase
+        .from('players')
+        .select('member_id')
+        .ilike('member_id', `${firstLetter}%`)
+        .order('member_id', { ascending: false })
+        .limit(1);
+        
+      let nextIdNum = 1;
+      if (existingIds && existingIds.length > 0 && existingIds[0].member_id) {
+        const lastId = existingIds[0].member_id;
+        const numPart = parseInt(lastId.substring(1), 10);
+        if (!isNaN(numPart)) {
+          nextIdNum = numPart + 1;
+        }
+      }
+      const newMemberId = `${firstLetter}${nextIdNum.toString().padStart(3, '0')}`;
+
       // 3. Insert Player Record
       const { data: playerData, error: playerError } = await supabase.from('players').insert([{
         first_name: firstName,
-        last_name: lastName,
+        last_name: lastName || null,
+        member_id: newMemberId,
         phone_number: phone,
         email: email || null,
         internal_notes: notes,
@@ -216,7 +236,7 @@ const PlayerRegistrationModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 <input type="text" className="input-field" placeholder="John" value={firstName} onChange={e => setFirstName(e.target.value)} />
               </div>
               <div className="form-group">
-                <label className="input-label">Last Name *</label>
+                <label className="input-label">Last Name</label>
                 <input type="text" className="input-field" placeholder="Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
               <div className="form-group">
